@@ -122,6 +122,7 @@ void Catalyst_Execute()
 
 void Catalyst_Finalize()
 {
+  exec_params["catalyst/channels/grid/data"].print();
   conduit_cpp::Node node;
   catalyst_status err = catalyst_finalize(conduit_cpp::c_node(&node));
   if (err != catalyst_status_ok)

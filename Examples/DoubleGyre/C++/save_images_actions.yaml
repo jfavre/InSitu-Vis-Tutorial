@@ -1,0 +1,62 @@
+# demonstrates
+#   pipeline re-use (see "pl_VelocityVector")
+# Two modes of operation
+#   1) use the already defined "Velocity" field from Ascent_Initialize()
+#   2) define a new vector field called "Velocity2" and use its pipeline
+#
+---
+-
+  action: "add_pipelines"
+  pipelines:
+    pl_VelocityVector:
+      f1:
+        type: "composite_vector"
+        params:
+          field1: "vx"
+          field2: "vy"
+          field3: "vz"
+          output_name: "Velocity2"
+    pl_VelocityMagnitude:
+      pipeline: "pl_VelocityVector"
+      f1:
+        type: "vector_magnitude"
+        params:
+          field: "Velocity2"
+          output_name: "velocity2_mag2d"
+    pl_VorticityMagnitude:
+      pipeline: "pl_VelocityVector"
+      f1:
+        type: "vorticity"
+        params:
+          field: "Velocity2"
+          output_name: "Mvorticity"
+      f2:
+        type: "vector_magnitude"
+        params:
+          field: "Mvorticity"
+          output_name: "vorticity_mag"
+-
+  action: "add_scenes"
+  scenes:
+    s1:
+      plots:
+        p1:
+          type: "pseudocolor"
+          pipeline: "pl_VelocityMagnitude"
+          field: "velocity2_mag2d"
+      renders:
+        r1:
+          image_width: 512
+          image_height: 512
+          image_prefix: "datasets/velocity_magnitude.%05d"
+    s2:
+      plots:
+        p1:
+          type: "pseudocolor"
+          pipeline: "pl_VorticityMagnitude"
+          field: "vorticity_mag"
+      renders:
+        r1:
+          image_width: 512
+          image_height: 512
+          image_prefix: "datasets/vorticity_magnitude.%05d"

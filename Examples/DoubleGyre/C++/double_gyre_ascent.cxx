@@ -22,9 +22,19 @@ namespace AscentAdaptor
 
   using double_gyre::simulation;
   
-void Ascent_Initialize()
+void Ascent_Initialize(int frequency)
 {
-  ascent.open();
+  std::string output_path = "datasets";
+  if(!conduit::utils::is_directory(output_path))
+  {
+    ASCENT_INFO("Creating output folder: " + output_path);
+    conduit::utils::create_directory(output_path);
+  }
+  conduit::Node ascent_options;
+  ascent_options["default_dir"] = output_path;
+  ascent_options["ascent_info"] = "verbose";
+  ascent_options["exceptions"] = "forward";
+  ascent.open(ascent_options);
   mesh["coordsets/coords/type"] = "uniform";
   mesh["coordsets/coords/dims/i"] = simulation.xres;
   mesh["coordsets/coords/dims/j"] = simulation.yres;
@@ -37,13 +47,17 @@ void Ascent_Initialize()
   mesh["coordsets/coords/spacing/dx"] = simulation.grid_bounds[1] / (simulation.xres - 1.0);
   mesh["coordsets/coords/spacing/dy"] = simulation.grid_bounds[3] / (simulation.yres - 1.0);
 
-  mesh["fields/vel_x/association"] = "vertex";
-  mesh["fields/vel_x/topology"] = "mesh";
-  mesh["fields/vel_x/values"].set_external(simulation.vel_x);
+  mesh["fields/vx/association"] = "vertex";
+  mesh["fields/vx/topology"] = "mesh";
+  mesh["fields/vx/values"].set_external(simulation.vel_x);
 
-  mesh["fields/vel_y/association"] = "vertex";
-  mesh["fields/vel_y/topology"] = "mesh";
-  mesh["fields/vel_y/values"].set_external(simulation.vel_y);
+  mesh["fields/vy/association"] = "vertex";
+  mesh["fields/vy/topology"] = "mesh";
+  mesh["fields/vy/values"].set_external(simulation.vel_y);
+  
+  mesh["fields/vz/association"] = "vertex";
+  mesh["fields/vz/topology"] = "mesh";
+  mesh["fields/vz/values"].set_external(simulation.vel_z);
 
   mesh["fields/Velocity/association"] = "vertex";
   mesh["fields/Velocity/topology"] = "mesh";
@@ -54,49 +68,28 @@ void Ascent_Initialize()
 // verify the mesh we created conforms to the blueprint
   conduit::Node verify_info;
   if(!conduit::blueprint::mesh::verify(mesh, verify_info))
-    std::cerr << "DoubleGyre Mesh Verify failed!" << std::endl;
+    std::cerr << "\nDoubleGyre Mesh Verify failed!" << std::endl;
   else{
-    std::cerr << "DoubleGyre Mesh verify success!" << std::endl;
+    std::cerr << "\nDoubleGyre Mesh verify success!" << std::endl;
    //print(self.mesh.to_yaml())
   }
-  conduit::Node &add_act0 = actions.append();
-  add_act0["action"] = "add_pipelines";
-  conduit::Node &pipelines = add_act0["pipelines"];
-  pipelines["pl1/f1/type"] = "vector_magnitude";
-  pipelines["pl1/f1/params/field"] = "Velocity";
-  pipelines["pl1/f1/params/output_name"] = "velocity_mag2d";
 
-  pipelines["pl2/f1/type"] = "vorticity";
-  pipelines["pl2/f1/params/field"] = "Velocity";
-  pipelines["pl2/f1/params/output_name"] = "Mvorticity";
-        
-  pipelines["pl2/f2/type"] = "vector_magnitude";
-  pipelines["pl2/f2/params/field"] = "Mvorticity";
-  pipelines["pl2/f2/params/output_name"] = "vorticity_mag";
+  conduit::Node &add_triggers = actions.append();
+  add_triggers["action"] = "add_triggers";
+  conduit::Node &triggers = add_triggers["triggers"];
 
-  conduit::Node &add_act1 = actions.append();
-  add_act1["action"] = "add_scenes";
+  // add a simple trigger (t1_ that fires at the given frequency
+  triggers["t1/params/condition"] = "cycle() % " + std::to_string(frequency) + " == 0";
+  triggers["t1/params/actions_file"] = "save_images_actions.yaml";
 
-  conduit::Node &scenes = add_act1["scenes"];
-  scenes["s1/plots/p1/type"] = "pseudocolor";
-  scenes["s1/plots/p1/pipeline"] = "pl1";
-  scenes["s1/plots/p1/field"] = "velocity_mag2d";
-  scenes["s1/image_prefix"] = "vel_mag.%04d";
-
-  scenes["s2/plots/p1/type"] = "pseudocolor";
-  scenes["s2/plots/p1/pipeline"] = "pl2";
-  scenes["s2/plots/p1/field"] = "vorticity_mag";
-  scenes["s2/image_prefix"] = "vort_mag.%04d";
   std::cout << actions.to_yaml() << std::endl;
 };
 
-void Ascent_Execute(int frequency)
+void Ascent_Execute()
 {
-  if(!(simulation.iteration % frequency)){
-    mesh["state/cycle"] = simulation.iteration;
-    ascent.publish(mesh);
-    ascent.execute(actions);
-  }
+  mesh["state/cycle"] = simulation.iteration;
+  ascent.publish(mesh);
+  ascent.execute(actions);
 };
 
 void Ascent_Finalize()

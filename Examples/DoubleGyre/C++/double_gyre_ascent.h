@@ -3,9 +3,9 @@
 
 namespace AscentAdaptor
 {
-  void Ascent_Initialize();
+  void Ascent_Initialize(int); //frequency at which to execute the Ascent actions
   
-  void Ascent_Execute(int); //frequency at which to execute the Ascent actions
+  void Ascent_Execute();
   
   void Ascent_Finalize();
 }

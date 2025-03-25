@@ -1,4 +1,5 @@
-/*Module demonstrating the use of Ascent and Catalyst for in-situ visualization"""
+/*
+# demonstrating the use of Ascent and Catalyst for in-situ visualization"""
 ##############################################################################
 # A simple simulator for a 2D problem, with an in-situ coupling
 # The data generation parameters for the vector field
@@ -11,7 +12,7 @@
 # this serial version runs until completion and saves images of the scalar field
 # at regular intervals. It saves the final solution to a blueprint HDF5 file
 #
-# Tested Thu 27 Apr 10:36:20 CEST 2023
+# Tested Thu 14 Nov 12:13:16 CET 2024
 #
 */
 #include <math.h>
@@ -37,15 +38,15 @@ using namespace AscentAdaptor;
 
 int main(int argc, char **argv)
 {
-  if(argc < 4 || argc > 5){
-    std::cerr << "Syntax: double_gyre_ascent x-resolution y-resolution nb_timesteps\n";
+  if(argc < 5 || argc > 6){
+    std::cerr << "Syntax: double_gyre_ascent x-resolution y-resolution nb_timesteps frequency\n";
     exit(1);
   }
   simulation.AllocateGrid(atoi(argv[1]), atoi(argv[2])); // x-resolution and y-resolution
   int max_iterations = atoi(argv[3]);
 
 #ifdef USE_ASCENT
-  Ascent_Initialize();
+  Ascent_Initialize(atoi(argv[4])); //frequency = 10. Execute 1 every 10 iterations
 #endif
 #ifdef USE_CATALYST
   Catalyst_Initialize(1, &argv[4]);
@@ -55,7 +56,7 @@ int main(int argc, char **argv)
     {
     simulation.compute_step();
 #ifdef USE_ASCENT
-    Ascent_Execute(10); //frequency = 10. Execute 1 every 10 iterations
+    Ascent_Execute();
 #endif
 #ifdef USE_CATALYST
     Catalyst_Execute();

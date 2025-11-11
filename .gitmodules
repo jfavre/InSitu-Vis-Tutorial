@@ -1,0 +1,3 @@
+[submodule "slides/src/install/slidev-theme-cscs"]
+	path = slides/src/install/slidev-theme-cscs
+	url = https://github.com/eth-cscs/slidev-theme-cscs

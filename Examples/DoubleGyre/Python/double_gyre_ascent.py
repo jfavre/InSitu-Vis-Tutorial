@@ -12,9 +12,10 @@
 #
 # run: python3 double_gyre_ascent.py
 #
-# Tested with Python 3.10.6, Fri Feb 17 03:03:14 PM CET 2023
+# Tested with Python 3.12.3, Wed 12 Nov 10:23:39 CET 2025
 #
 ##############################################################################
+import os
 import math
 import numpy as np
 import conduit
@@ -40,15 +41,15 @@ class Simulation:
 
         self.xres = resolution[0] # X horizontal resolution
         self.yres = resolution[1] # Y vertical   resolution
-        xaxis = np.linspace(0., 2., self.xres)
-        yaxis = np.linspace(0., 1., self.yres)
+        xaxis = np.linspace(0.0, 2.0, self.xres)
+        yaxis = np.linspace(0.0, 1.0, self.yres)
         self.x_coord, self.y_coord = np.meshgrid(xaxis, yaxis, indexing="xy")
 
-        self.vel_x = np.zeros(self.x_coord.shape)
-        self.vel_y = np.zeros(self.x_coord.shape)
-        self.vel_z = np.zeros(self.x_coord.shape)
+        self.vel_x = np.zeros(self.x_coord.shape, dtype=np.float64)
+        self.vel_y = np.zeros(self.x_coord.shape, dtype=np.float64)
+        self.vel_z = np.zeros(self.x_coord.shape, dtype=np.float64)
         self.A = 0.1 * np.pi
-        self.w = 2.0 * np.pi/10.
+        self.w = 2.0 * np.pi/10.0
         self.E = 0.25
 
     def compute_loop(self):
@@ -66,10 +67,10 @@ class Simulation:
         """Draw with mathplotlib"""
         #plot the 'vel_x' field iso-contour lines
         fig, ax = plt.subplots()
-        CS = ax.contour(self.vel_x, levels=10)
+        CS = ax.contour(self.vel_y, levels=10)
         ax.clabel(CS, inline=True, fontsize=10)
-        ax.set_title('Vx iso-contours')
-        plt.savefig(f'Vx-iso-contours.{self.iteration:03d}.png')
+        ax.set_title('Vy iso-contours')
+        plt.savefig(f'Vy-iso-contours.{self.iteration:03d}.png')
         #plot the velocity vectors sub-sampled
         fig1, ax1 = plt.subplots()
         stride = 10
@@ -105,47 +106,56 @@ class SimulationWithAscent(Simulation):
             self.vel_x = -self.A * np.sin(Ft) * np.cos(np.pi*self.y_coord)
             self.vel_y =  self.A * np.cos(Ft) * np.sin(np.pi*self.y_coord)*fft
             self.iteration += 1
-
-            if not self.iteration % self.frequency:
-                self.mesh["state/cycle"] = self.iteration
-                self.scenes["s1/renders/r1/image_name"] = f'vel_mag.{self.iteration:03d}'
-                self.scenes["s2/renders/r1/image_name"] = f'vort_mag.{self.iteration:03d}'
-                self.insitu.publish(self.mesh)
-                self.insitu.execute(self.actions)
+            self.mesh["state/cycle"] = self.iteration
+            self.insitu.publish(self.mesh)
+            self.insitu.execute(self.actions)
 
     def initialize_ascent(self):
         """Creates a Conduit node describing the mesh and add default action"""
-        ascent_opts = conduit.Node()
-        ascent_opts["exceptions"] = "forward"
+        ascent_options = conduit.Node()
+        output_path = "datasets"
+        if not os.path.exists(output_path):
+          os.makedirs(output_path)
+        ascent_options["default_dir"] = output_path
+        ascent_options["exceptions"] = "forward"
         # open Ascent
-        self.insitu.open(ascent_opts)
-
+        self.insitu.open(ascent_options)
+        
         self.mesh["coordsets/coords/type"] = "uniform"
         self.mesh["coordsets/coords/dims/i"] = self.xres
         self.mesh["coordsets/coords/dims/j"] = self.yres
-
+        
         self.mesh["topologies/mesh/type"] = "uniform"
         self.mesh["topologies/mesh/coordset"] = "coords"
 
         self.mesh["coordsets/coords/origin/x"] = 0.0
         self.mesh["coordsets/coords/origin/y"] = 0.0
+        
         self.mesh["coordsets/coords/spacing/dx"] = self.delta_x
         self.mesh["coordsets/coords/spacing/dy"] = self.delta_x
-
-        self.mesh["fields/vel_x/association"] = "vertex"
-        self.mesh["fields/vel_x/topology"] = "mesh"
-        self.mesh["fields/vel_x/values"].set_external(self.vel_x.ravel())
-
-        self.mesh["fields/vel_y/association"] = "vertex"
-        self.mesh["fields/vel_y/topology"] = "mesh"
-        self.mesh["fields/vel_y/values"].set_external(self.vel_y.ravel())
-
-        self.mesh["fields/Velocity/association"] = "vertex"
-        self.mesh["fields/Velocity/topology"] = "mesh"
-        self.mesh["fields/Velocity/values/u"].set_external(self.vel_x.ravel())
-        self.mesh["fields/Velocity/values/v"].set_external(self.vel_y.ravel())
-        self.mesh["fields/Velocity/values/w"].set_external(self.vel_z.ravel())
-
+        
+        #self.mesh["coordsets/coords/dims/k"] = 1
+        #self.mesh["coordsets/coords/origin/z"] = 0.0
+        #self.mesh["coordsets/coords/spacing/dz"] = 0.0
+        
+        self.mesh["fields/vx/association"] = "vertex"
+        self.mesh["fields/vx/topology"] = "mesh"
+        self.mesh["fields/vx/values"].set_external(self.vel_x.ravel())
+        
+        self.mesh["fields/vy/association"] = "vertex"
+        self.mesh["fields/vy/topology"] = "mesh"
+        self.mesh["fields/vy/values"].set_external(self.vel_y.ravel())
+        
+        self.mesh["fields/vz/association"] = "vertex"
+        self.mesh["fields/vz/topology"] = "mesh"
+        self.mesh["fields/vz/values"].set_external(self.vel_z.ravel())
+        
+        self.mesh["fields/Velocity/association"] = "vertex";
+        self.mesh["fields/Velocity/topology"] = "mesh";
+        self.mesh["fields/Velocity/values/u"].set_external(self.vel_x.ravel());
+        self.mesh["fields/Velocity/values/v"].set_external(self.vel_x.ravel());
+        self.mesh["fields/Velocity/values/w"].set_external(self.vel_z.ravel());
+        
         # verify the mesh we created conforms to the blueprint
         verify_info = conduit.Node()
         if not conduit.blueprint.mesh.verify(self.mesh, verify_info):
@@ -153,34 +163,14 @@ class SimulationWithAscent(Simulation):
         else:
             print("DoubleGyre Mesh verify success!")
             #print(self.mesh.to_yaml())
-
-        self.add_act = self.actions.append()
-        self.add_act["action"] = "add_pipelines"
-        self.pipelines = self.add_act["pipelines"]
-        self.pipelines["pl1/f1/type"] = "vector_magnitude"
-        self.pipelines["pl1/f1/params/field"] = "Velocity"
-        self.pipelines["pl1/f1/params/output_name"] = "velocity_mag2d"
-
-        self.pipelines["pl2/f1/type"] = "vorticity"
-        self.pipelines["pl2/f1/params/field"] = "Velocity"
-        self.pipelines["pl2/f1/params/output_name"] = "Mvorticity"
         
-        self.pipelines["pl2/f2/type"] = "vector_magnitude"
-        self.pipelines["pl2/f2/params/field"] = "Mvorticity"
-        self.pipelines["pl2/f2/params/output_name"] = "vorticity_mag"
-
         self.add_act = self.actions.append()
-        self.add_act["action"] = "add_scenes"
-
-        self.scenes = self.add_act["scenes"]
-        self.scenes["s1/plots/p1/type"] = "pseudocolor"
-        self.scenes["s1/plots/p1/pipeline"] = "pl1"
-        self.scenes["s1/plots/p1/field"] = "velocity_mag2d"
-
-        self.scenes = self.add_act["scenes"]
-        self.scenes["s2/plots/p1/type"] = "pseudocolor"
-        self.scenes["s2/plots/p1/pipeline"] = "pl2"
-        self.scenes["s2/plots/p1/field"] = "vorticity_mag"
+        self.add_act["action"] = "add_triggers"
+        
+        self.triggers = self.add_act["triggers"]
+        self.triggers["t1/params/condition"] = f'(cycle() % {self.frequency}) == 0'
+        self.triggers["t1/params/actions_file"] = "save_images_actions.yaml"
+        print(self.actions.to_yaml())
 
     def finalize_ascent(self):
         """Save the mesh to a blueprint HDF5 file and close"""
@@ -199,10 +189,10 @@ class SimulationWithAscent(Simulation):
         add_extr["action"] = "add_extracts"
         extracts = add_extr["extracts"]
         extracts["e1/type"]="relay"
-        extracts["e1/params/path"] = "/dev/shm/mesh"
+        extracts["e1/params/path"] = "datasets/mesh"
         extracts["e1/pipeline"] = "pl1"
-        extracts["e1/params/protocol"] = "blueprint/mesh/hdf5"
-
+        extracts["e1/params/protocol"] = "hdf5"
+        print("saving grid data to HDF5 Blueprint file \'datasets/mesh*.root\'")
         self.insitu.execute(hdf5_action)
         self.insitu.close()
 

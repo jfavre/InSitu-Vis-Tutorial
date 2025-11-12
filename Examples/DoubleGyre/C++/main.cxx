@@ -39,7 +39,7 @@ using namespace AscentAdaptor;
 int main(int argc, char **argv)
 {
   if(argc < 5 || argc > 6){
-    std::cerr << "Syntax: double_gyre_ascent x-resolution y-resolution nb_timesteps frequency\n";
+    std::cerr << "Syntax: double_gyre* x-resolution y-resolution nb_timesteps frequency\n";
     exit(1);
   }
   simulation.AllocateGrid(atoi(argv[1]), atoi(argv[2])); // x-resolution and y-resolution

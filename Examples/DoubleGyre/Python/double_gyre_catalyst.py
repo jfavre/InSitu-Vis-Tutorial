@@ -1,18 +1,18 @@
-"""Module demonstrating the use of Ascent for in-situ visualization"""
+"""Module demonstrating the use of Catalyst for in-situ visualization"""
 ##############################################################################
 # A simple simulator for a 2D problem, with an in-situ coupling
 # The data generation parameters for the vector field
 # come from https://shaddenlab.berkeley.edu/uploads/LCS-tutorial/examples.html
-# with the Ascent library https://ascent.readthedocs.io/en/latest/#
+# using Catalyst https://catalyst-in-situ.readthedocs.io/en/latest/index.html
 #
 # Author: Jean M. Favre, Swiss National Supercomputing Center
 #
 # this serial version runs until completion and saves images of the scalar field
-# at regular intervals. It saves the final solution to a blueprint HDF5 file
+# at regular intervals.
 #
 # run: python3 double_gyre_catalyst.py
 #
-# Tested with Python 3.10.12, Mon 11 Sep 13:42:19 CEST 2023
+# Tested with Python 3.12.3, Mon 11 Sep 13:42:19 CEST 2023
 #
 ##############################################################################
 import math
@@ -33,34 +33,38 @@ class Simulation:
     iterations : int
         the maximum number of iterations (default 100)
     """
-    def __init__(self, resolution=(32,16), iterations=10):
+    def __init__(self, resolution=(256,128), iterations=10):
         self.iteration = 0
         self.timestep = 0.1
         self.max_iterations = iterations
 
         self.xres = resolution[0] # X horizontal resolution
         self.yres = resolution[1] # Y vertical   resolution
-        xaxis = np.linspace(0., 2., self.xres)
-        yaxis = np.linspace(0., 1., self.yres)
-        self.x_coord, self.y_coord = np.meshgrid(xaxis, yaxis, indexing="xy")
+        self.xaxis = np.linspace(0., 2., self.xres)
+        self.yaxis = np.linspace(0., 1., self.yres)
+        self.zaxis = np.linspace(0., 0., 1)
+        self.x_coord, self.y_coord = np.meshgrid(self.xaxis, self.yaxis, indexing="xy")
 
-        self.vel_x = np.zeros(self.x_coord.shape)
-        self.vel_y = np.zeros(self.x_coord.shape)
-        self.vel_z = np.zeros(self.x_coord.shape)
+        self.vel_x = np.zeros(self.xres * self.yres, dtype=np.float64)
+        self.vel_y = np.zeros(self.xres * self.yres, dtype=np.float64)
+        self.vel_z = np.zeros(self.xres * self.yres, dtype=np.float64)
         self.A = 0.1 * np.pi
-        self.w = 2.0 * np.pi/10.
+        self.w = 2.0 * np.pi / 10.
         self.E = 0.25
+
+    def compute_onestep(self):
+        At = self.E * np.sin(self.w * self.iteration * self.timestep)
+        Bt = 1.0 - 2.0 * At
+        Ft = (At * self.x_coord * self.x_coord + Bt * self.x_coord) * np.pi
+        fft = 2.0 * At * self.x_coord + Bt
+        self.vel_x = -self.A * np.sin(Ft) * np.cos(np.pi * self.y_coord)
+        self.vel_y =  self.A * np.cos(Ft) * np.sin(np.pi * self.y_coord) * fft
+        self.iteration += 1
 
     def compute_loop(self):
         """Computes and updates velocity fields"""
         while self.iteration < self.max_iterations:
-            At = self.E * math.sin(self.w * self.iteration * self.timestep)
-            Bt = 1.0 - 2.0 * At
-            Ft = (At * self.x_coord*self.x_coord + Bt * self.x_coord) * np.pi
-            fft = 2.0 * At * self.x_coord + Bt
-            self.vel_x = -self.A * np.sin(Ft) * np.cos(np.pi*self.y_coord)
-            self.vel_y =  self.A * np.cos(Ft) * np.sin(np.pi*self.y_coord)*fft
-            self.iteration += 1
+            self.compute_onestep()
 
     def draw_matplotlib(self):
         """Draw with mathplotlib"""
@@ -91,22 +95,17 @@ class SimulationWithCatalyst(Simulation):
         self.delta_x = 2.0 / (self.xres - 1)
         self.insitu = conduit.Node()
         self.pv_script = pv_script
-
-    def compute_loop(self):
-        while self.iteration < self.max_iterations:
-            At = self.E * math.sin(self.w * self.iteration * self.timestep)
-            Bt = 1.0 - 2.0 * At
-            Ft = (At * self.x_coord*self.x_coord + Bt * self.x_coord) * np.pi
-            fft = 2.0 * At * self.x_coord + Bt
-            self.vel_x = -self.A * np.sin(Ft) * np.cos(np.pi*self.y_coord)
-            self.vel_y =  self.A * np.cos(Ft) * np.sin(np.pi*self.y_coord)*fft
-            self.iteration += 1
-            
-            exec_params = conduit.Node()
-            channel = exec_params["catalyst/channels/grid"]
-            channel["type"] = "mesh"
-            mesh = channel["data"]
+        self.initialize_catalyst()
         
+        self.exec_params = conduit.Node()
+        
+    def Initialize(self):
+        channel = self.exec_params["catalyst/channels/grid"]
+        channel["type"] = "mesh"
+        mesh = channel["data"]
+        meshType = "uniform"
+        
+        if meshType == "uniform":
             mesh["coordsets/coords/type"] = "uniform"
             mesh["coordsets/coords/dims/i"] = self.xres
             mesh["coordsets/coords/dims/j"] = self.yres
@@ -121,34 +120,47 @@ class SimulationWithCatalyst(Simulation):
             mesh["coordsets/coords/spacing/dx"] = self.delta_x
             mesh["coordsets/coords/spacing/dy"] = self.delta_x
             mesh["coordsets/coords/spacing/dz"] = self.delta_x
+        elif meshType == "rectilinear":
+            mesh["coordsets/coords/type"] = "rectilinear"
+            mesh["coordsets/coords/values/x"].set_external(self.xaxis)
+            mesh["coordsets/coords/values/y"].set_external(self.yaxis)
+            #mesh["coordsets/coords/values/z"].set_external(self.zaxis)
+            mesh["topologies/mesh/type"] = "rectilinear"
+            mesh["topologies/mesh/coordset"] = "coords"
 
-            mesh["fields/vel_x/association"] = "vertex"
-            mesh["fields/vel_x/topology"] = "mesh"
-            mesh["fields/vel_x/values"].set_external(self.vel_x.ravel())
+        mesh["fields/vel_x/association"] = "vertex"
+        mesh["fields/vel_x/topology"] = "mesh"
+        mesh["fields/vel_x/values"].set_external(self.vel_x)
 
-            mesh["fields/vel_y/association"] = "vertex"
-            mesh["fields/vel_y/topology"] = "mesh"
-            mesh["fields/vel_y/values"].set_external(self.vel_y.ravel())
+        mesh["fields/vel_y/association"] = "vertex"
+        mesh["fields/vel_y/topology"] = "mesh"
+        mesh["fields/vel_y/values"].set_external(self.vel_y)
 
-            mesh["fields/Velocity/association"] = "vertex"
-            mesh["fields/Velocity/topology"] = "mesh"
-            mesh["fields/Velocity/values/u"].set_external(self.vel_x.ravel())
-            mesh["fields/Velocity/values/v"].set_external(self.vel_y.ravel())
-            mesh["fields/Velocity/values/w"].set_external(self.vel_z.ravel())
+        mesh["fields/Velocity/association"] = "vertex"
+        mesh["fields/Velocity/topology"] = "mesh"
+        mesh["fields/Velocity/values/u"].set_external(self.vel_x)
+        mesh["fields/Velocity/values/v"].set_external(self.vel_y)
+        mesh["fields/Velocity/values/w"].set_external(self.vel_z)
 
-            # verify the mesh we created conforms to the blueprint
-            verify_info = conduit.Node()
-            if not conduit.blueprint.mesh.verify(mesh, verify_info):
-              print("DoubleGyre Mesh Verify failed!")
-            else:
-              pass
+        # verify the mesh we created conforms to the blueprint
+        verify_info = conduit.Node()
+        if not conduit.blueprint.mesh.verify(mesh, verify_info):
+          print("DoubleGyre Mesh Verify failed!")
+          print(verify_info)
+        else:
+            pass
+            #print(mesh)
               #print("DoubleGyre Mesh verify success!")
-              #print(self.mesh.to_yaml())
-            """Computes and updates velocity fields and process in-situ requests"""
-            state = exec_params["catalyst/state"]
+
+    def compute_loop(self):
+        """Computes and updates velocity fields"""
+        while self.iteration < self.max_iterations:
+            self.compute_onestep()
+            #self.iteration += 1
+            state = self.exec_params["catalyst/state"]
             state["timestep"] = self.iteration
-            state["time"] = self.iteration *0.1
-            catalyst.execute(exec_params)
+            state["time"] = self.iteration * 0.1
+            catalyst.execute(self.exec_params)
 
     def initialize_catalyst(self):
         """Creates a Conduit node """
@@ -160,11 +172,12 @@ class SimulationWithCatalyst(Simulation):
 
     def finalize_catalyst(self):
         """close"""
+        print(self.exec_params["catalyst/channels/grid/data"])
         catalyst.finalize(self.insitu)
 
 #sim = Simulation()
-sim = SimulationWithCatalyst(iterations=100, pv_script="pvDoubleGyre.py")
-sim.initialize_catalyst()
+sim = SimulationWithCatalyst(iterations=10, pv_script="pvDoubleGyre.py")
+sim.Initialize()
 sim.compute_loop()
 sim.draw_matplotlib()
 sim.finalize_catalyst()

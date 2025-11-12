@@ -17,18 +17,19 @@
           field3: "vz"
           output_name: "Velocity2"
     pl_VelocityMagnitude:
-      pipeline: "pl_VelocityVector"
+      #pipeline: "pl_VelocityVector"
       f1:
         type: "vector_magnitude"
         params:
-          field: "Velocity2"
-          output_name: "velocity2_mag2d"
+          field: "Velocity"
+          #field: "Velocity2"
+          output_name: "velocity_mag2d"
     pl_VorticityMagnitude:
       pipeline: "pl_VelocityVector"
       f1:
         type: "vorticity"
         params:
-          field: "Velocity2"
+          field: "Velocity"
           output_name: "Mvorticity"
       f2:
         type: "vector_magnitude"
@@ -43,20 +44,26 @@
         p1:
           type: "pseudocolor"
           pipeline: "pl_VelocityMagnitude"
-          field: "velocity2_mag2d"
+          field: "velocity_mag2d"
+          color_table:
+            name: "Yellow - Gray - Blue"
       renders:
         r1:
-          image_width: 512
-          image_height: 512
+          image_width: 1280
+          image_height: 768
           image_prefix: "datasets/velocity_magnitude.%05d"
+          color_bar_position: [0.2, 0.95, -0.95, -0.75]
     s2:
       plots:
         p1:
           type: "pseudocolor"
           pipeline: "pl_VorticityMagnitude"
           field: "vorticity_mag"
+          color_table:
+            name: "Yellow - Gray - Blue"
       renders:
         r1:
-          image_width: 512
-          image_height: 512
+          image_width: 1280
+          image_height: 768
           image_prefix: "datasets/vorticity_magnitude.%05d"
+          color_bar_position: [0.2, 0.95, -0.95, -0.75]

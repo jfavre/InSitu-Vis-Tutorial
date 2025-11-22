@@ -34,6 +34,8 @@ hideInToc: true
 ### In-situ visualization course
 
 Swiss National Supercomputing Center (CSCS) - ETH Zurich<br/>
+<br>
+Jean M. Favre, Jean-Guillaume Piccinali, Alberto Invernizzi<br>
 
 ---
 src: ./md/01.md
@@ -67,5 +69,10 @@ hide: false
 
 ---
 src: ./md/dummysph.md
+hide: false
+---
+
+---
+src: ./md/heatdiffusion.md
 hide: false
 ---

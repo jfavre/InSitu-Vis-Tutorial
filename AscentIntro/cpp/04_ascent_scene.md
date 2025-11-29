@@ -176,8 +176,7 @@ Changing color tables: https://github.com/Alpine-DAV/ascent/blob/develop/src/exa
 
 ![scene4_1](../img/scene3_out_scene_ex4_render_viridis.png)
 
-- ascent_scene_example4: 
-out_scene_ex4_render_inferno.png
+- ascent_scene_example4: out_scene_ex4_render_inferno.png
 
 ![scene4_2](../img/scene3_out_scene_ex4_render_inferno.png)
 

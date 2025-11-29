@@ -87,7 +87,6 @@ result is the contour rendering of the "braid" field for 2 iso-values (0.2 and
 ```      
 
 ### ascent_pipeline_example1.cpp -> .png
-out_pipeline_ex1_contour.png
 
 - ascent_pipeline_example1: out_pipeline_ex1_contour.png
 

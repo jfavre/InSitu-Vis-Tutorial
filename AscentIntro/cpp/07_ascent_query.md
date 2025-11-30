@@ -1,6 +1,10 @@
 # Ascent query Example
 
 - https://ascent.readthedocs.io/en/latest/Tutorial_Intro_Queries.html
+    - [C++ example](###ascent_query_example1.cpp)
+    - [Yaml actions](###ascent_actions.yaml)
+    - [Outputs](####Outputs)
+    - [Alps](###Build-and-run-on-Alps)
 
 ## Asking and answering questions with Queries
 
@@ -83,7 +87,9 @@ extracting mesh cycle and entropy of a time varying [mesh].
       image_name: "out_gyre"
 ```
 
-#### ascent_query_example1.cpp -> .png + query results
+#### Outputs
+
+- ascent_query_example1.cpp -> .png + query results
 
 ![ex1](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMG9zZjE5OHVtbTN3b2FxMXQxMXNzZmE4ejRmenU2NWQwNmpkYmlodiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/f2k3UwqMXjKCZy3IJk/giphy.gif)
 

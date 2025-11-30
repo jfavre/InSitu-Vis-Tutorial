@@ -1,6 +1,10 @@
 # First Light Example
 
 - https://ascent.readthedocs.io/en/latest/Tutorial_Intro_First_Light.html
+    - [C++ example](###ascent_first_light_example.cpp)
+    - [Yaml actions](###ascent_actions.yaml)
+    - [Outputs](###out_first_light_render_3d.png)
+    - [Alps](###Build-and-run-on-Alps)
 
 The `First Light` example demonstrates a basic visualization pipeline to
 generate an image with Ascent: create data → publish → define actions → execute

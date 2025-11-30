@@ -1,6 +1,10 @@
 # Ascent trigger Example
 
 - https://ascent.readthedocs.io/en/latest/Tutorial_Intro_Triggers.html
+    - [C++ example](###ascent_trigger_example1.cpp)
+    - [Yaml actions](###ascent_actions.yaml)
+    - [Outputs](####Outputs)
+    - [Alps](###Build-and-run-on-Alps)
 
 ## Adapting visualization with Triggers
 
@@ -74,12 +78,12 @@ using the following 2 actions file:
         actions_file: "entropy_trigger_actions.yaml" # <---
 ```
 
-#### ascent_trigger_example1.cpp -> .png + query results
+#### Outputs
 
-- cycle_trigger_out_000500.png
+- ascent_trigger_example1.cpp -> cycle_trigger_out_000500.png
 ![ex1_trigger1](../img/trigger1_cycle_trigger_out_000500.png)
 
-- entropy_trigger_out_000200.png
+- ascent_trigger_example1.cpp -> entropy_trigger_out_000200.png
 ![ex1_trigger2](../img/trigger1_entropy_trigger_out_000200.png)
 
 ### Build and run on Alps

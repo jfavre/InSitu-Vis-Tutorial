@@ -1,6 +1,10 @@
 # Ascent binning Example
 
 - https://ascent.readthedocs.io/en/latest/Tutorial_Intro_Binning.html
+    - [C++ example](###ascent_binning_example1.cpp)
+    - [Yaml actions](###ascent_actions.yaml)
+    - [Outputs](####Outputs)
+    - [Alps](###Build-and-run-on-Alps)
 
 ## Data Binning
 
@@ -64,17 +68,17 @@ binning (1D, 2D or 3D) data spatially
         name: "3d_binning"
 ```
 
-#### ascent_trigger_example1.cpp -> .png + expression results
+#### Outputs
 
-- 1D_binning.png:
+- ascent_trigger_example1.cpp -> 1D_binning.png:
 
 ![ex1_1D](../img/binning1_1D.png)
 
-- 2D_binning.png:
+- ascent_trigger_example1.cpp -> 2D_binning.png:
 
 ![ex1_1D](../img/binning1_2D.png)
 
-- 3D_binning.png:
+- ascent_trigger_example1.cpp -> 3D_binning.png:
 
 ![ex1_1D](../img/binning1_3D.png)
 

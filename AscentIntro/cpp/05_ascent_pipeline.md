@@ -1,6 +1,10 @@
 # Ascent pipeline Example
 
 - https://ascent.readthedocs.io/en/latest/Tutorial_Intro_Pipelines.html
+    - [C++ example](###ascent_pipeline_example1.cpp)
+    - [Yaml actions](###ascent_actions.yaml)
+    - [Outputs](###Outputs)
+    - [Alps](###Build-and-run-on-Alps)
 
 ## Transforming data with Pipelines
 
@@ -86,7 +90,7 @@ result is the contour rendering of the "braid" field for 2 iso-values (0.2 and
       image_name: "out_pipeline_ex1_contour"
 ```      
 
-### ascent_pipeline_example1.cpp -> .png
+### Outputs
 
 - ascent_pipeline_example1: out_pipeline_ex1_contour.png
 
@@ -101,7 +105,7 @@ uenv start -v default insitu_ascent/0.9.5:2109123735
 cp -a /user-tools/linux-neoverse_v2/ascent-0.9.5-*/examples/ascent/tutorial/ascent_intro/cpp .
 cd cpp
 
-make ASCENT_DIR=/user-tools/env/default/ ascent_pipeline_example1
+make ASCENT_DIR=/user-tools/env/default/ ascent_pipeline_example1 # or ascent_pipeline_examples
 
 L1=/user-tools/linux-neoverse_v2/cray-gtl-8.1.32-25u7zwci35lms4zyrodhf24vlfken7xo/lib
 

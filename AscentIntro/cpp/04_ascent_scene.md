@@ -1,6 +1,10 @@
 # Ascent scene Example
 
 - https://ascent.readthedocs.io/en/latest/Tutorial_Intro_Scenes.html
+    - [C++ example](###ascent_scene_example1.cpp)
+    - [Yaml actions](###ascent_actions.yaml)
+    - [Outputs](###ascent_scene_example1)
+    - [Alps](###Build-and-run-on-Alps)
 
 ## Rendering images with Scenes
 
@@ -85,7 +89,7 @@ uenv start -v default insitu_ascent/0.9.5:2109123735
 cp -a /user-tools/linux-neoverse_v2/ascent-0.9.5-*/examples/ascent/tutorial/ascent_intro/cpp .
 cd cpp
 
-make ASCENT_DIR=/user-tools/env/default/ ascent_scene_example1
+make ASCENT_DIR=/user-tools/env/default/ ascent_scene_example1 # or ascent_scene_examples
 
 L1=/user-tools/linux-neoverse_v2/cray-gtl-8.1.32-25u7zwci35lms4zyrodhf24vlfken7xo/lib
 

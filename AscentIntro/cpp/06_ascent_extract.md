@@ -1,6 +1,10 @@
 # Ascent extract Example
 
 - https://ascent.readthedocs.io/en/latest/Tutorial_Intro_Extracts.html
+    - [C++ example](###ascent_extract_example1.cpp)
+    - [Yaml actions](###ascent_actions.yaml)
+    - [Outputs](###Outputs)
+    - [Alps](###Build-and-run-on-Alps)
 
 ## Capturing data with Extracts
 
@@ -55,9 +59,9 @@ exporting input mesh data to a Blueprint HDF5 file.
         protocol: "blueprint/mesh/hdf5"
 ```      
 
-#### ascent_extract_example1.cpp -> .root -> [VisIt]
+#### Outputs
 
-- ascent_extract_example1: out_export_braid_all_fields.cycle_000100.root
+- ascent_extract_example1: out_export_braid_all_fields.cycle_000100.root -> [VisIt]
 
 ![ex1](../img/extract1_out_export_braid_all_fields.cycle_000100.png)
 
@@ -74,7 +78,7 @@ uenv start -v default insitu_ascent/0.9.5:2109123735
 cp -a /user-tools/linux-neoverse_v2/ascent-0.9.5-*/examples/ascent/tutorial/ascent_intro/cpp .
 cd cpp
 
-make ASCENT_DIR=/user-tools/env/default/ ascent_extract_example1
+make ASCENT_DIR=/user-tools/env/default/ ascent_extract_example1 # or ascent_extract_examples
 
 L1=/user-tools/linux-neoverse_v2/cray-gtl-8.1.32-25u7zwci35lms4zyrodhf24vlfken7xo/lib
 

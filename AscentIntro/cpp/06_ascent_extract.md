@@ -72,6 +72,7 @@ uenv image pull build::insitu_ascent/0.9.5:2109123735@daint
 uenv start -v default insitu_ascent/0.9.5:2109123735
 
 cp -a /user-tools/linux-neoverse_v2/ascent-0.9.5-*/examples/ascent/tutorial/ascent_intro/cpp .
+cd cpp
 
 make ASCENT_DIR=/user-tools/env/default/ ascent_extract_example1
 

@@ -24,6 +24,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: actions/setup-node@v4
         with:
@@ -39,7 +41,10 @@ jobs:
       - name: Setup @antfu/ni
         run: npm i -g @antfu/ni
 
-      - name: Install dependencies
+      - name: Install dependencies with npm
+        run: npm install
+
+      - name: Install dependencies with nci
         run: nci
 
       - name: Clear dist directory

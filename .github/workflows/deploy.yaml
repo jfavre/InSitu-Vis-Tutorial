@@ -1,4 +1,4 @@
-name: Deploy Slidev to GitHub Pages
+name: https://jfavre.github.io/InSitu-Vis-Tutorial/slides/
 
 on:
   workflow_dispatch:
@@ -31,27 +31,21 @@ jobs:
         with:
           node-version: 'lts/*'
 
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-node-
-      
-      - name: Setup @antfu/ni
-        run: npm i -g @antfu/ni
+      - name: Install pnpm & deps
+        run: |
+          npm i -g pnpm
+          cd ../install
+          pnpm install
+          cd -
+          rm node_modules          
+          pnpm install
 
-      - name: Install dependencies with npm
-        run: npm install
-
-      - name: Install dependencies with nci
-        run: nci
-
-      - name: Clear dist directory
-        run: rm -rf ../dist && mkdir -p ../dist
-  
-      - name: Build slidev
-        run: nr build --base /${{github.event.repository.name}} --out ../dist
+      - name: Build Slidev
+        run: |
+          pnpm build --base /${{github.event.repository.name}}/slides/ --out ../../dist/slides
+          pwd
+          ls -l ../../dist/slides
+          ls -l ../../dist/
 
       - name: Setup Github Pages
         uses: actions/configure-pages@v4
@@ -59,14 +53,25 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: /home/runner/work/InSitu-Vis-Tutorial/InSitu-Vis-Tutorial/slides/dist/
+
+#       - name: Build PDF
+#         run: |
+#           pnpm exec playwright install
+#           pnpm export --output /tmp/InSitu-Vis-Tutorial.pdf --format pdf 
+# 
+#       - name: Upload PDF artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: InSitu-Vis-Tutorial.pdf
+#           path: /tmp/InSitu-Vis-Tutorial.pdf
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}slides/
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

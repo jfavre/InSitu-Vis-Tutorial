@@ -13,12 +13,18 @@ namespace InSitu
 {
   ascent::Ascent ascent;
   conduit::Node mesh;
-  conduit::Node actions; // default actions can also be overidden by file ascent_actions.yaml
+  conduit::Node actions;
 
 void Initialize(int argc, char* argv[], const simulation_data *sim)
 {
   std::cout << "AscentInitialize.........................................\n";
+  std::string output_path = "datasets/";
+  if(!conduit::utils::is_directory(output_path))
+    {
+      conduit::utils::create_directory(output_path);
+    }
   conduit::Node ascent_options;
+  ascent_options["default_dir"] = output_path;
   ascent_options["mpi_comm"] = MPI_Comm_c2f(MPI_COMM_WORLD);
   // default name for ghost field is used
   // ascent_options["ghost_field_name"].append() = "ascent_ghosts";
@@ -91,15 +97,31 @@ void Initialize(int argc, char* argv[], const simulation_data *sim)
     }
   //else CONDUIT_INFO("blueprint verify success!" + verify_info.to_json());
 
-  conduit::Node &add_action = actions.append();
-  
+  std::string trigger_file = conduit::utils::join_file_path(".","trigger_actions.yaml");
+  // remove old file
+  if(conduit::utils::is_file(trigger_file))
+    {
+    conduit::utils::remove_file(trigger_file);
+    }
+
+  conduit::Node trigger_actions;
+  conduit::Node &add_action= trigger_actions.append();
   add_action["action"] = "add_scenes";
   conduit::Node &scenes       = add_action["scenes"];
   scenes["view/plots/p1/type"]  = "pseudocolor";
   scenes["view/plots/p1/field"] = "temperature";
-  scenes["view/image_prefix"] = "view_%04d";
+  scenes["view/image_prefix"] = "datasets/temperature_%04d";
 
-  //std::cout << mesh.to_yaml();
+  trigger_actions.save(trigger_file);
+
+  std::string condition = "cycle() % 100 == 0";
+  conduit::Node triggers;
+  triggers["t1/params/condition"] = condition;
+  triggers["t1/params/actions_file"] = trigger_file;
+
+  conduit::Node &add_triggers= actions.append();
+  add_triggers["action"] = "add_triggers";
+  add_triggers["triggers"] = triggers;
 }
 
 void Execute(simulation_data& sim) //int cycle, double time, Grid& grid, Attributes& attribs)

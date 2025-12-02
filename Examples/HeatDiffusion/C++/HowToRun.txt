@@ -1,6 +1,8 @@
 # How to compile with the Catalyst backend
 
-cmake -B buildCatalyst -S . -DINSITU=Catalyst \
+uenv start paraview/6.0.1:2181378144 --view=default
+
+cmake -B buildCatalyst -S . -DINSITU=Catalyst
 cmake --build buildCatalyst
 
 # locally on my laptop, I use

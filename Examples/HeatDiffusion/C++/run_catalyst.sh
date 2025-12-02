@@ -8,16 +8,13 @@
 #SBATCH --exclusive
 #SBATCH --time=00:10:00
 #SBATCH --partition=normal
-##SBATCH --mail-type=ALL
-##SBATCH --mail-user=jfavre@cscs.ch
-##SBATCH --output=/users/jfavre/out.log
-##SBATCH --error=/users/jfavre/err.log
-
-module load daint-gpu
-module swap PrgEnv-cray PrgEnv-gnu
-module load ParaView/5.11.1-CrayGNU-21.09-EGL
-export CATALYST_IMPLEMENTATION_PATHS=$EBROOTPARAVIEW/lib64/catalyst
+#SBATCH --uenv=paraview/6.0.1:2181378144
+#SBATCH --view=default
 
 mkdir -p $SCRATCH/Catalyst/test
+cp $PWD/buildCatalyst/bin/heat_diffusion $SCRATCH/Catalyst/test
+cp $PWD/catalyst_state.py $SCRATCH/Catalyst/test
 
-srun -n $SLURM_NNODES  $PWD/buildCatalyst/bin/pjacobi  --res=128 --mesh=uniform $PWD/catalyst_state.py
+pushd $SCRATCH/Catalyst/test
+
+srun heat_diffusion  --res=128 --mesh=uniform catalyst_state.py

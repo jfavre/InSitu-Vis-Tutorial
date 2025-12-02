@@ -1,20 +1,11 @@
 # How to compile with the Catalyst backend
 
-module load daint-gpu CMake
-module load Catalyst/2.0.0-CrayGNU-21.09-rc3
-
-Version 5.11: 
-
-cmake -B buildCatalyst -S . \
-       -DCMAKE_BUILD_TYPE=Release \
-       -DINSITU=Catalyst \
-       -Dcatalyst_DIR=${EBROOTCATALYST}/lib/cmake/catalyst-2.0
-
+cmake -B buildCatalyst -S . -DINSITU=Catalyst \
 cmake --build buildCatalyst
 
-env PARAVIEW_LOG_CATALYST_VERBOSITY=INFO  ./bin/heat_diffusion catalyst_state.py 
-
-rm /tmp/output-*png log; make && mpiexec -n 4 ./bin/heat_diffusion catalyst_state.py --output datasets/dataset-%04ts.vtpd  &> log; eog /tmp/output-*png
+# locally on my laptop, I use
+. /users/jfavre/pv600.sh
+mpiexec -n 4 ./buildCatalyst/bin/heat_diffusion catalyst_state.py
 
 ./buildCatalyst/bin/heat_diffusion --res=32 --mesh=uniform      catalyst_state.py
 ./buildCatalyst/bin/heat_diffusion --res=32 --mesh=rectilinear  catalyst_state.py
@@ -24,30 +15,15 @@ rm /tmp/output-*png log; make && mpiexec -n 4 ./bin/heat_diffusion catalyst_stat
 #################################################
 
 # How to compile with the Ascent backend
-
-mkdir buildAscent
-
 # on Piz Daint
-module load daint-gpu CMake cudatoolkit Ascent/0.9.1-CrayGNU-21.09
+uenv start insitu_ascent/0.9.5:2109123735 --view=default
 
 # locally on my laptop, I use
-export LD_LIBRARY_PATH=/local/apps/Ascent/install/ascent-develop/lib:/local/apps/Ascent/install/vtk-m-v2.0.0/lib
+. /users/jfavre/ascent.sh
 
-ccmake -B buildAscent -S . \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DINSITU=Ascent 
-
-# if compiled locally, add
-ccmake -B buildAscent -S . \
- -DCMAKE_BUILD_TYPE=Release \
- -DINSITU=Ascent \
- -DAscent_DIR=/local/apps/Ascent/install/ascent-develop/lib/cmake/ascent
-  
+cmake -S . -B buildAscent -DINSITU=Ascent 
 cmake --build buildAscent
-. ~/ascentv0.9.2.sh
-
-get the files {ascent_actions.yaml,plot_actions.yaml} in your runtime directory
-export LD_LIBRARY_PATH=/local/apps/Ascent/install/vtk-m-v2.0.0/lib
+mpiexec -n 4 ./buildAscent/bin/heat_diffusion --mesh=uniform  --verbose
 
 #################################################
 Connect to Piz Daint:

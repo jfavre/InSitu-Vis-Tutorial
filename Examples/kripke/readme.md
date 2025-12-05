@@ -36,7 +36,7 @@ cp ./CMakeLists.txt ascent.git/src/examples/proxies/kripke/CMakeLists.txt # !
 uenv image pull build::insitu_ascent/0.9.5:2109123735@daint
 uenv start -v default insitu_ascent/0.9.5:2109123735@daint
 
-ccmake -S ascent.git/src/examples/proxies/kripke/ -B build \
+cmake -S ascent.git/src/examples/proxies/kripke/ -B build \
 -DCMAKE_CXX_COMPILER=mpicxx \
 -DCMAKE_BUILD_TYPE=Debug
 

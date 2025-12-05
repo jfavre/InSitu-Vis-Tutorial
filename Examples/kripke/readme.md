@@ -41,6 +41,8 @@ ccmake -S ascent.git/src/examples/proxies/kripke/ -B build \
 -DCMAKE_BUILD_TYPE=Debug
 
 cmake --build build -t Kripke -j # -v
+# or use the precompiled code:
+# /user-tools/linux-neoverse_v2/ascent-0.9.5*/examples/ascent/proxies/kripke/kripke_par
 
 # Run the code with:
 ln -s ./ascent.git/src/examples/proxies/kripke/ascent_options.json .

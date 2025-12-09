@@ -6,6 +6,10 @@
 # Written by: Jean M, Favre, Swiss National Supercomputing Center
 ##############################################################################
 
+# next two lines are a temporary solution to import conduit.relay
+import sys
+sys.path.append("/capstor/scratch/cscs/jfavre/Ascent-cuda/install/conduit-v0.9.5/python-modules")
+
 import conduit
 import conduit.relay.io
 import numpy as np

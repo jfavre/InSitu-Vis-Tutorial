@@ -98,8 +98,8 @@ level: 2
 ```yaml
   action: "add_queries"
   queries:
-    q1:                                       
-      params:                                 
+    q1:
+      params:
         expression: "min(field('rho')).value" 
         name: "min_rho"                       
     q2:
@@ -272,18 +272,6 @@ level: 2
  </div>
 
 </div>
-
----
-level: 2
----
-
-# Ascent: compositing (wip)
-
----
-level: 2
----
-
-# Ascent: occa (wip)
 
 ---
 layout: two-cols-header

@@ -110,11 +110,11 @@ void Initialize(int argc, char* argv[], const simulation_data *sim)
   conduit::Node &scenes       = add_action["scenes"];
   scenes["view/plots/p1/type"]  = "pseudocolor";
   scenes["view/plots/p1/field"] = "temperature";
-  scenes["view/image_prefix"] = "datasets/temperature_%04d";
+  scenes["view/image_prefix"] = "datasets/ascent_temperature_isolines-%06d";
 
   trigger_actions.save(trigger_file);
 
-  std::string condition = "cycle() % 100 == 0";
+  std::string condition = "cycle() % 1000 == 0";
   conduit::Node triggers;
   triggers["t1/params/condition"] = condition;
   triggers["t1/params/actions_file"] = trigger_file;

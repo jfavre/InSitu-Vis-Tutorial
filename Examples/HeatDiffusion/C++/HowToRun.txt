@@ -1,10 +1,10 @@
 # How to compile with the Catalyst backend
 
-uenv start paraview/6.0.1:2181378144 --view=default
+uenv start paraview/6.0.1:2191677242 --view=default
 
 cmake -B buildCatalyst -S . -DINSITU=Catalyst
 cmake --build buildCatalyst
-srun -u -n 4 -pdebug -t 2 ./buildCatalyst/bin/heat_diffusion --mesh=uniform catalyst_state.py
+srun -u -n 4 -pdebug -t 2 ./buildCatalyst/bin/heat_diffusion --mesh=uniform --res=64 catalyst_state.py
 
 # locally on my laptop, I use
 . /users/jfavre/pv600.sh
@@ -27,7 +27,7 @@ uenv start insitu_ascent/0.9.5:2109123735 --view=default
 cmake -S . -B buildAscent -DINSITU=Ascent 
 cmake --build buildAscent
 
-srun -u -n 4 -pdebug -t 2 ./buildAscent/bin/heat_diffusion --mesh=uniform --res=32
+srun -u -n 4 -pdebug -t 2 ./buildAscent/bin/heat_diffusion --mesh=uniform --res=64
 mpiexec -n 4 ./buildAscent/bin/heat_diffusion --mesh=uniform  --verbose
 
 #################################################

@@ -8,8 +8,10 @@
 #SBATCH --exclusive
 #SBATCH --time=00:10:00
 #SBATCH --partition=normal
-#SBATCH --uenv=paraview/6.0.1:2181378144
+#SBATCH --uenv=paraview/6.0.1:2191677242
 #SBATCH --view=default
+#SBATCH --exclude=nid006545
+
 
 mkdir -p $SCRATCH/Catalyst/test
 cp $PWD/buildCatalyst/bin/heat_diffusion $SCRATCH/Catalyst/test

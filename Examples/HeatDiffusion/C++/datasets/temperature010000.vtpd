@@ -1,0 +1,25 @@
+<VTKFile type="vtkPartitionedDataSet" version="1.0" byte_order="LittleEndian" header_type="UInt64">
+  <vtkPartitionedDataSet>
+    <DataSet index="0" file="temperature010000/temperature010000_0.vti"/>
+    <DataSet index="1" file="temperature010000/temperature010000_1.vti"/>
+    <DataSet index="2" file="temperature010000/temperature010000_2.vti"/>
+    <DataSet index="3" file="temperature010000/temperature010000_3.vti"/>
+  </vtkPartitionedDataSet>
+  <FieldData>
+    <DataArray type="Float64" Name="time" NumberOfTuples="1" format="binary" RangeMin="1000" RangeMax="1000">
+      CAAAAAAAAAAAAAAAAECPQA==
+    </DataArray>
+    <DataArray type="Int32" Name="timestep" NumberOfTuples="1" format="binary" RangeMin="10000" RangeMax="10000">
+      BAAAAAAAAAAQJwAA
+    </DataArray>
+    <DataArray type="Int32" Name="cycle" NumberOfTuples="1" format="binary" RangeMin="10000" RangeMax="10000">
+      BAAAAAAAAAAQJwAA
+    </DataArray>
+    <Array type="String" Name="channel" NumberOfTuples="1" format="binary">
+      BQAAAAAAAABncmlkAA==
+    </Array>
+    <DataArray type="Float64" Name="TimeValue" NumberOfTuples="1" format="binary" RangeMin="1000" RangeMax="1000">
+      CAAAAAAAAAAAAAAAAECPQA==
+    </DataArray>
+  </FieldData>
+</VTKFile>

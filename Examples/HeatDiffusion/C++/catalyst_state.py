@@ -64,7 +64,7 @@ ResetCamera()
 pNG1 = CreateExtractor('PNG', renderView1, registrationName='PNG1')
 pNG1.Trigger = 'TimeStep'
 pNG1.Trigger.Frequency = 1000
-pNG1.Writer.FileName = 'view-{timestep:06d}{camera}.png'
+pNG1.Writer.FileName = 'catalyst_temperature_isolines-{timestep:06d}{camera}.png'
 pNG1.Writer.ImageResolution = [1024,1024]
 pNG1.Writer.Format = 'PNG'
 
@@ -72,18 +72,19 @@ pNG1.Writer.Format = 'PNG'
 
 vTP1 = CreateExtractor('VTPD', reader, registrationName='VTPD1')
 vTP1.Trigger = 'TimeStep'
-vTP1.Trigger.Frequency = 5000
-vTP1.Writer.FileName = 'dataset_{timestep:06d}.vtpd'
+vTP1.Trigger.Frequency = 10000
+vTP1.Writer.FileName = 'temperature{timestep:06d}.vtpd'
 
 SetActiveSource(reader)
 
 from paraview import catalyst
 options = catalyst.Options()
 options.GlobalTrigger = 'TimeStep'
-options.EnableCatalystLive = 0
-options.CatalystLiveURL = ':22222'
-options.CatalystLiveTrigger = 'TimeStep'
-options.ExtractsOutputDirectory = output_path
+options.GlobalTrigger.Frequency = 50
+#options.EnableCatalystLive = 1
+#options.CatalystLiveURL = 'daint-ln004'
+#options.CatalystLiveTrigger = 'TimeStep'
+#options.ExtractsOutputDirectory = output_path
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
     from paraview.simple import SaveExtractsUsingCatalystOptions

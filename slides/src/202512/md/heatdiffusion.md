@@ -2,7 +2,7 @@
 layout: section
 ---
 
-# A Heat Diffusion example
+# A CUDA-enabled Heat Diffusion example
 
 ---
 level: 2

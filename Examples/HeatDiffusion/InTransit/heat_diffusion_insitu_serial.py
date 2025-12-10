@@ -90,7 +90,7 @@ class Simulation:
       engine = self.io.open("diffusion.bp", adios2.bindings.Mode.Write)
       while self.iteration < self.Max_iterations:
         self.SimulateOneTimestep()
-        if not self.iteration % 100:
+        if not self.iteration % 10:
           engine.begin_step()
           engine.put(self.T_id, self.v)
           engine.end_step()

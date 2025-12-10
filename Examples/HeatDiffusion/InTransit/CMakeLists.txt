@@ -2,16 +2,15 @@ project(Heat-diffusion-adios)
 cmake_minimum_required(VERSION 3.26)
 
 find_package(Fides REQUIRED)
-find_package(ADIOS2 REQUIRED)
-
+#find_package(ADIOS2 REQUIRED)
+set(CMAKE_CXX_STANDARD 20)
 if (ADIOS2_VERSION VERSION_GREATER_EQUAL "2.8.0")
   set(ADIOS_DEFS FIDES_ADIOS_HAS_RANDOM_ACCESS)
 endif()
 
-# need to continue to support v1.9 for awhile
-find_package(VTKm REQUIRED)
+find_package(Viskores REQUIRED)
 
-if (VTKm_ENABLE_CUDA)
+if (Viskores_ENABLE_CUDA)
   enable_language(CUDA)
 endif()
 
@@ -23,16 +22,12 @@ endif()
 
 if (FIDES_USE_MPI)
   add_executable(fides-sst-reader fides-sst-reader.cpp)
-  vtkm_add_target_information(fides-sst-reader
+  viskores_add_target_information(fides-sst-reader
                             DROP_UNUSED_SYMBOLS
                             MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES fides-sst-reader.cpp)
-  if (VTKm_VERSION VERSION_EQUAL "1.9")
-    set(VTKM_LIBS vtkm_cont vtkm_rendering vtkm_filter)
-  elseif(VTKm_VERSION VERSION_GREATER_EQUAL "2.0")
-    set(VTKM_LIBS vtkm::cont vtkm::rendering vtkm::filter)
-  endif()
+  set(VTKM_LIBS viskores::cont viskores::rendering viskores::filter)
   target_link_libraries(fides-sst-reader PUBLIC
-    adios2::adios2 ${VTKM_LIBS} MPI::MPI_C MPI::MPI_CXX fides)
+     ${VTKM_LIBS} MPI::MPI_C MPI::MPI_CXX fides)
 endif()
 

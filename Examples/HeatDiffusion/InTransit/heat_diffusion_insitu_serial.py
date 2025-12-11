@@ -64,7 +64,8 @@ class Simulation:
         self.v[0,:] = [math.sin(math.pi * j * self.dx)
                        for j in range(self.rmesh_dims[1])]
         #last (top) row
-        self.v[-1,:] = self.v[0,:]* math.exp(-math.pi)
+        self.v[-1,:] = [math.sin(math.pi * j * self.dx)
+                       for j in range(self.rmesh_dims[1])]
 
     def Finalize(self):
         """plot the scalar field iso-contour lines"""
@@ -97,7 +98,7 @@ class Simulation:
       engine.close()
 
 def main():
-    sim = Simulation(resolution=128, iterations=1000)
+    sim = Simulation(resolution=256, iterations=5000)
     sim.Initialize()
     sim.Initialize_ADIOS()
     sim.MainLoop()

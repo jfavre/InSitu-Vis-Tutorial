@@ -47,21 +47,20 @@ class Simulation:
         self.set_initial_bc()
         
     def Initialize_ADIOS(self):
-        self.adios = adios2.ADIOS(configFile="adios2.xml", comm=self.comm)
-        self.io    = self.adios.DeclareIO("writerIO")
-        #self.io    = self.adios.DeclareIO("InTransit-vis")
-        self.T_id  = self.io.DefineVariable("temperature", self.v,
+        self.adios = adios2.Adios("adios2.xml", comm=self.comm)
+        self.io    = self.adios.declare_io("writerIO")
+        #self.io    = self.adios.declare_io("InTransit-vis")
+        self.T_id  = self.io.define_variable("temperature", self.v,
                                             [1, self.xres+2, self.xres+2], # Shape of global object
                                             [0, self.par_rank * self.yres, 0], # Where to begin writing
-                                            [1, self.yres+2, self.xres+2], # Where to end writing
-                                            adios2.ConstantDims)
-        self.step_id  = self.io.DefineVariable("step", np.array([1], dtype=np.int32))
-        self.io.DefineAttribute("Fides_Data_Model", "uniform")
-        self.io.DefineAttribute("Fides_Origin", np.array([0, 0., 0.]))
-        self.io.DefineAttribute("Fides_Spacing", np.array([self.dx, self.dx, self.dx]))
-        self.io.DefineAttribute("Fides_Dimension_Variable", "temperature")
-        self.io.DefineAttribute("Fides_Variable_List", ["temperature"])
-        self.io.DefineAttribute("Fides_Variable_Associations", ["points"])
+                                            [1, self.yres+2, self.xres+2])
+        self.step_id  = self.io.define_variable("step", np.array([1], dtype=np.int32))
+        self.io.define_attribute("Fides_Data_Model", "uniform")
+        self.io.define_attribute("Fides_Origin", np.array([0, 0., 0.]))
+        self.io.define_attribute("Fides_Spacing", np.array([self.dx, self.dx, self.dx]))
+        self.io.define_attribute("Fides_Dimension_Variable", "temperature")
+        self.io.define_attribute("Fides_Variable_List", ["temperature"])
+        self.io.define_attribute("Fides_Variable_Associations", ["points"])
 
     def set_initial_bc(self):
         if self.par_size > 1:
@@ -69,13 +68,15 @@ class Simulation:
             self.v[0,:] = [math.sin(math.pi * j * self.dx)
                            for j in range(self.rmesh_dims[1])]
           if self.par_rank == (self.par_size - 1):
-            self.v[-1,:] = self.v[0,:] * math.exp(-math.pi)
+            self.v[-1,:] = [math.sin(math.pi * j * self.dx)
+                           for j in range(self.rmesh_dims[1])]
         else:
           #first (bottom) row
           self.v[0,:] = [math.sin(math.pi * j * self.dx)
                          for j in range(self.rmesh_dims[1])]
           #last (top) row
-          self.v[-1,:] = self.v[0,:] * math.exp(-math.pi)
+          self.v[-1,:] = [math.sin(math.pi * j * self.dx)
+                         for j in range(self.rmesh_dims[1])]
 
     def Finalize(self):
         pass
@@ -108,17 +109,17 @@ class Simulation:
                              dest=below, recvbuf=[self.v[-1,], self.xres + 2, MPI.DOUBLE], source=above)
 
     def MainLoop(self, frequency=100):
-      engine = self.io.Open("diffusion.bp", adios2.Mode.Write)
+      engine = self.io.open("diffusion.bp", adios2.bindings.Mode.Write)
       while self.iteration < self.Max_iterations:
         # writing the ADIOS data before the first simulation step enables us to
         # verify the boundary conditions by writing the 0-th step
         if self.iteration % frequency == 0:
-          engine.BeginStep()
-          engine.Put(self.T_id, self.v)
-          engine.Put(self.step_id, np.array([self.iteration], dtype=np.int32))
-          engine.EndStep()
+          engine.begin_step()
+          engine.put(self.T_id, self.v)
+          engine.put(self.step_id, np.array([self.iteration], dtype=np.int32))
+          engine.end_step()
         self.SimulateOneTimestep()
-      engine.Close()
+      engine.close()
 
 class ParallelSimulation(Simulation):
     def __init__(self, resolution, iterations):
@@ -139,7 +140,7 @@ class ParallelSimulation(Simulation):
 # Main program
 #
 def main():
-    sim = ParallelSimulation(resolution=64, iterations=10000)
+    sim = ParallelSimulation(resolution=256, iterations=10000)
     sim.Initialize()
     sim.Initialize_ADIOS()
     sim.MainLoop(frequency=500)

@@ -1,5 +1,6 @@
 
 spack load adios2
+spack load py-matplotlib
 
 cmake -B buildSSTConsumer -S . \
  -DCMAKE_BUILD_TYPE=Release \

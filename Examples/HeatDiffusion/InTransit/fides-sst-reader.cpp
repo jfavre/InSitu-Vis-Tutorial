@@ -1,6 +1,7 @@
 #include <mpi.h>
 #include <adios2.h>
 #include <thread>
+#include <vector>
 #include <format>
 #include <fides/DataSetReader.h>
 
@@ -46,6 +47,13 @@ int main(int argc, char** argv)
       break;
       }
 
+    // Create a mapper, canvas and view that will be used to render the scene
+    viskores::rendering::Scene scene;
+    viskores::rendering::MapperWireframer mapperWireframe;
+    viskores::rendering::CanvasRayTracer canvas(768,768);
+    viskores::cont::ColorTable colorTable("viridis");
+    colorTable.RescaleToRange({0.0, 1.0});
+    
     fides::metadata::MetaData selections;
     fides::metadata::Vector<size_t> blockSelection;
     blockSelection.Data.push_back(0);
@@ -56,37 +64,40 @@ int main(int argc, char** argv)
     selections.Set(fides::keys::FIELDS(), fieldSelection);
 
     viskores::cont::PartitionedDataSet output = fides_reader.ReadDataSet(paths, selections);
-    auto inputData = output.GetPartition(0);
-    viskores::cont::ArrayHandle<viskores::Range> drange;
-    if (!inputData.HasField("temperature", viskores::cont::Field::Association::Points))
+    auto nbOfProducers = output.GetNumberOfPartitions();
+    std::vector<viskores::rendering::Actor> mesh_actors;
+    for(auto i=0; i < nbOfProducers; i++)
       {
-      std::cerr << "Error: expected a temperature array. Did not get it." << std::endl;
-      }
-    else
-      {
+      auto inputData = output.GetPartition(i);
+      /*
       const auto& scalarField = inputData.GetField("temperature");
       const auto& scalarHandle = scalarField.GetData().AsArrayHandle<viskores::cont::ArrayHandle<double>>();
-      drange = viskores::cont::ArrayRangeCompute(scalarHandle);
-
+      auto drange = viskores::cont::ArrayRangeCompute(scalarHandle);
       auto range = drange.ReadPortal().Get(0);
-      if (range.Min != 0)
-        {
-        std::cerr << "Unexpected temperature min. Got " << range.Min << std::endl;
-        }
-      if (range.Max > 1.0)
-        {
-        std::cerr << "Unexpected temperature max range. Got " << range.Max << std::endl;
-        }
-      //std::cout << "range(temperature) = " << range << std::endl;
-      }
+      std::cout << i << " :range(temperature) = " << range << std::endl;
 
-    viskores::cont::ColorTable colorTable("viridis");
-    colorTable.RescaleToRange(drange.ReadPortal().Get(0));
-    viskores::rendering::Actor mesh_actor(inputData.GetCellSet(),
+      viskores::cont::ArrayHandle<viskores::Range> drange;
+
+      if (!inputData.HasField("temperature", viskores::cont::Field::Association::Points))
+        {
+        std::cerr << "Error: expected a temperature array. Did not get it." << std::endl;
+        }
+      else
+        {
+        if (range.Min != 0)
+          std::cerr << "Unexpected temperature min. Got " << range.Min << std::endl;
+        if (range.Max > 1.0)
+          std::cerr << "Unexpected temperature max range. Got " << range.Max << std::endl;
+      //std::cout << "range(temperature) = " << range << std::endl;
+        }
+*/
+      viskores::rendering::Actor a = viskores::rendering::Actor(inputData.GetCellSet(),
                                inputData.GetCoordinateSystem(),
                                inputData.GetField("temperature"),
                                colorTable);
-
+      a.SetScalarRange({0.0, 1.0});
+      mesh_actors.push_back(a);
+/*
     viskores::filter::contour::Contour contour;
     contour.SetGenerateNormals(false);
     contour.SetMergeDuplicatePoints(true);
@@ -100,20 +111,17 @@ int main(int argc, char** argv)
 
     viskores::cont::DataSet isolines2 = xform.Execute(isolines);
 
-    viskores::rendering::Actor isolines_actor(isolines.GetCellSet(),
+    viskores::rendering::Actor b = viskores::rendering::Actor(isolines.GetCellSet(),
                                isolines.GetCoordinateSystem(),
                                isolines.GetField("temperature"),
                                viskores::rendering::Color(1.0f, 1.0f, 1.0f, 1.0f));
-        
+    mesh_actors.push_back(b);
+*/
     //viskores::Bounds coordsBounds = inputData.GetCoordinateSystem().GetBounds();
 
-    // Create a mapper, canvas and view that will be used to render the scene
-    viskores::rendering::Scene scene;
-    viskores::rendering::MapperWireframer mapperWireframe;
-    viskores::rendering::CanvasRayTracer canvas(768,768);
-
-    scene.AddActor(mesh_actor);
-    scene.AddActor(isolines_actor);
+    scene.AddActor(a);
+    //scene.AddActor(b);
+    }
     viskores::rendering::View3D view(scene, mapperWireframe, canvas);
     auto camera = view.GetCamera();
 

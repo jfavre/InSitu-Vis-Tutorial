@@ -12,7 +12,7 @@ cmake --build buildSSTConsumer
 # First run. Classic output to an ADIOS BP file
 # make sure adios2.xml contains the string <engine type="BP4">
  
-python3 heat_diffusion_insitu_serial.py 
+mpiexec -n 2 python3 heat_diffusion_insitu_parallel.py 
 
 bpls -la diffusion.bp
 
@@ -22,7 +22,7 @@ bpls -la diffusion.bp
 
 rm -rf diffusion.bp
 . ~/viskores.sh
-python3 heat_diffusion_insitu_serial.py &
+mpiexec -n 2 python3 heat_diffusion_insitu_parallel.py &
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`spack location -i adios2`/lib
 ./buildSSTConsumer/fides-sst-reader

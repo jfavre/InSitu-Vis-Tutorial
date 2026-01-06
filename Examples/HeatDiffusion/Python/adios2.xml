@@ -15,7 +15,7 @@
 
             <parameter key="RendezvousReaderCount" value="1"/>
             <parameter key="QueueLimit" value="3"/>
-            <parameter key="QueueFullPolicy" value="Block"/>
+            <parameter key="QueueFullPolicy" value="Discard"/>
 
             <!-- BP4/SST engine parameters -->
             <parameter key="NumAggregators" value="1"/>

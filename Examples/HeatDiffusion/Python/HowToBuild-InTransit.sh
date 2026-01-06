@@ -1,4 +1,4 @@
-uenv start paraview/6.0.1:2191677242 --view=default
+uenv start paraview/6.0.1:v1 --view=default
 spack load adios2 
 
 git clone https://gitlab.kitware.com/vtk/fides.git
@@ -22,7 +22,7 @@ cmake --build buildSSTConsumer
 # First run. Classic output to an ADIOS BP file
 # make sure adios2.xml contains the string <engine type="BP4">
  
-python3 heat_diffusion_insitu_serial.py 
+python3 heat_diffusion_insitu_parallel.py 
 
 bpls -la diffusion.bp
 
@@ -31,7 +31,7 @@ bpls -la diffusion.bp
 # make sure adios2.xml contains the string <engine type="SST">
 
 rm -rf diffusion.bp
-python3 heat_diffusion_insitu_serial.py &
+python3 heat_diffusion_insitu_parallel.py &
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/capstor/scratch/cscs/jfavre/Viskores-build/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`spack location -i adios2`/lib

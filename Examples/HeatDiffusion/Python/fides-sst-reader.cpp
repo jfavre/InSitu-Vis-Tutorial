@@ -91,10 +91,7 @@ int main(int argc, char** argv)
       //std::cout << "range(temperature) = " << range << std::endl;
         }
 */
-      viskores::rendering::Actor a = viskores::rendering::Actor(inputData.GetCellSet(),
-                               inputData.GetCoordinateSystem(),
-                               inputData.GetField("temperature"),
-                               colorTable);
+      viskores::rendering::Actor a = viskores::rendering::Actor(inputData, "temperature", colorTable);
       a.SetScalarRange({0.0, 1.0});
       mesh_actors.push_back(a);
 /*
@@ -111,9 +108,7 @@ int main(int argc, char** argv)
 
     viskores::cont::DataSet isolines2 = xform.Execute(isolines);
 
-    viskores::rendering::Actor b = viskores::rendering::Actor(isolines.GetCellSet(),
-                               isolines.GetCoordinateSystem(),
-                               isolines.GetField("temperature"),
+    viskores::rendering::Actor b = viskores::rendering::Actor(isolines, "temperature",
                                viskores::rendering::Color(1.0f, 1.0f, 1.0f, 1.0f));
     mesh_actors.push_back(b);
 */

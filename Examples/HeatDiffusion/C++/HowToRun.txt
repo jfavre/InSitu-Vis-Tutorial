@@ -1,6 +1,6 @@
 # How to compile with the Catalyst backend
 
-uenv start paraview/6.0.1:2191677242 --view=default
+uenv start paraview/6.0.1:v1 --view=default
 
 cmake -B buildCatalyst -S . -DINSITU=Catalyst
 cmake --build buildCatalyst

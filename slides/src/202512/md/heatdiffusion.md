@@ -60,7 +60,7 @@ sbatch run_ascent.sh
 git clone https://github.com/jfavre/SummerUniversity2024
 cd SummerUniversity2024/cuda/practicals/diffusion
 
-uenv start paraview/6.0.1:2191677242@daint --view=default
+uenv start paraview/6.0.1:v1@daint --view=default
 
 cmake -S . -B buildCatalyst \
       -DCMAKE_CUDA_ARCHITECTURES=90 -DCMAKE_BUILD_TYPE=Release \

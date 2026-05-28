@@ -4,7 +4,7 @@
 # Written and tested by Jean M. Favre, CSCS
 import paraview
 paraview.compatibility.major = 6
-paraview.compatibility.minor = 0
+paraview.compatibility.minor = 1
 
 from paraview.simple import *
 #### disable automatic camera reset on 'Show'

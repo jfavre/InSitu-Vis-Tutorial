@@ -43,22 +43,24 @@ class Simulation:
         self.xaxis = np.linspace(0., 2., self.xres)
         self.yaxis = np.linspace(0., 1., self.yres)
         self.zaxis = np.linspace(0., 0., 1)
-        self.x_coord, self.y_coord = np.meshgrid(self.xaxis, self.yaxis, indexing="xy")
-
+        
         self.vel_x = np.zeros(self.xres * self.yres, dtype=np.float64)
         self.vel_y = np.zeros(self.xres * self.yres, dtype=np.float64)
         self.vel_z = np.zeros(self.xres * self.yres, dtype=np.float64)
         self.A = 0.1 * np.pi
         self.w = 2.0 * np.pi / 10.
         self.E = 0.25
-
+        
     def compute_onestep(self):
         At = self.E * np.sin(self.w * self.iteration * self.timestep)
         Bt = 1.0 - 2.0 * At
-        Ft = (At * self.x_coord * self.x_coord + Bt * self.x_coord) * np.pi
-        fft = 2.0 * At * self.x_coord + Bt
-        self.vel_x = -self.A * np.sin(Ft) * np.cos(np.pi * self.y_coord)
-        self.vel_y =  self.A * np.cos(Ft) * np.sin(np.pi * self.y_coord) * fft
+        for iy in range(self.yres):
+          for ix in range(self.xres):
+            Ft = (At * self.xaxis[ix] * self.xaxis[ix] + Bt * self.xaxis[ix]) * np.pi
+            fft = 2.0 * At * self.xaxis[ix] + Bt
+            self.vel_x[ix + iy*self.xres] = -self.A * np.sin(Ft) * np.cos(np.pi * self.yaxis[iy])
+            self.vel_y[ix + iy*self.xres] =  self.A * np.cos(Ft) * np.sin(np.pi * self.yaxis[iy]) * fft
+        
         self.iteration += 1
 
     def compute_loop(self):
@@ -68,17 +70,26 @@ class Simulation:
 
     def draw_matplotlib(self):
         """Draw with mathplotlib"""
+        x_coord, y_coord = np.meshgrid(self.xaxis, self.yaxis, indexing="xy")
         #plot the 'vel_x' field iso-contour lines
         fig, ax = plt.subplots()
-        CS = ax.contour(self.vel_x, levels=10)
+        
+        ax.set_xlim(self.xaxis[0], self.xaxis[-1])
+        ax.set_ylim(self.yaxis[0], self.yaxis[-1])
+        ax.set_aspect('equal', adjustable='box')
+        CS = ax.contour(x_coord, y_coord, (self.vel_x*self.vel_x + self.vel_y*self.vel_y).reshape(self.yres,self.xres), levels=10)
         ax.clabel(CS, inline=True, fontsize=10)
-        ax.set_title('Vx iso-contours')
-        plt.savefig(f'Vx-iso-contours.{self.iteration:03d}.png')
+        ax.set_title('Velocity magnitude iso-contours')
+        plt.savefig(f'Velocitymagnitude.{self.iteration:03d}.png')
         #plot the velocity vectors sub-sampled
         fig1, ax1 = plt.subplots()
+        ax1.set_xlim(self.xaxis[0], self.xaxis[-1])
+        ax1.set_ylim(self.yaxis[0], self.yaxis[-1])
+        ax1.set_aspect('equal', adjustable='box')
         stride = 10
-        ax1.quiver(self.x_coord[::stride, ::stride], self.y_coord[::stride, ::stride],
-                   self.vel_x[::stride, ::stride], self.vel_y[::stride, ::stride])
+        
+        ax1.quiver(x_coord[::stride, ::stride], y_coord[::stride, ::stride],
+                   self.vel_x.reshape(self.xres,self.yres)[::stride, ::stride], self.vel_y.reshape(self.xres,self.yres)[::stride, ::stride])
         ax1.set_title('Velocity vectors')
         plt.savefig(f'Velocity.{self.iteration:03d}.png')
 
@@ -128,19 +139,22 @@ class SimulationWithCatalyst(Simulation):
             mesh["topologies/mesh/type"] = "rectilinear"
             mesh["topologies/mesh/coordset"] = "coords"
 
-        mesh["fields/vel_x/association"] = "vertex"
-        mesh["fields/vel_x/topology"] = "mesh"
-        mesh["fields/vel_x/values"].set_external(self.vel_x)
-
-        mesh["fields/vel_y/association"] = "vertex"
-        mesh["fields/vel_y/topology"] = "mesh"
-        mesh["fields/vel_y/values"].set_external(self.vel_y)
-
-        mesh["fields/Velocity/association"] = "vertex"
-        mesh["fields/Velocity/topology"] = "mesh"
-        mesh["fields/Velocity/values/u"].set_external(self.vel_x)
-        mesh["fields/Velocity/values/v"].set_external(self.vel_y)
-        mesh["fields/Velocity/values/w"].set_external(self.vel_z)
+        fields = mesh['fields']
+        fields["/vel_x/association"] = "vertex"
+        fields["/vel_x/topology"] = "mesh"
+        fields["/vel_x/values"].set_external(self.vel_x)
+        fields["/vel_x/volume_dependent"] = 'false'
+        
+        fields["vel_y/association"] = "vertex"
+        fields["vel_y/topology"] = "mesh"
+        fields["vel_y/values"].set_external(self.vel_y)
+        fields["vel_y/volume_dependent"] = 'false'
+        
+        fields["Velocity/association"] = "vertex"
+        fields["Velocity/topology"] = "mesh"
+        fields["Velocity/values/x"].set_external(self.vel_x)
+        fields["Velocity/values/y"].set_external(self.vel_y)
+        fields["Velocity/values/z"].set_external(self.vel_z)
 
         # verify the mesh we created conforms to the blueprint
         verify_info = conduit.Node()
@@ -149,8 +163,7 @@ class SimulationWithCatalyst(Simulation):
           print(verify_info)
         else:
             pass
-            #print(mesh)
-              #print("DoubleGyre Mesh verify success!")
+            #print("DoubleGyre Mesh verify success!")
 
     def compute_loop(self):
         """Computes and updates velocity fields"""
@@ -165,18 +178,19 @@ class SimulationWithCatalyst(Simulation):
     def initialize_catalyst(self):
         """Creates a Conduit node """
         self.insitu["catalyst/scripts/script/filename"] = self.pv_script
-        self.insitu["catalyst_load/implementation"] = "paraview"
+        self.insitu["catalyst_load/implementation"] = 'paraview'
 
         # open Catalyst
         catalyst.initialize(self.insitu)
 
     def finalize_catalyst(self):
         """close"""
+        print("finalize_catalyst\n")
         print(self.exec_params["catalyst/channels/grid/data"])
         catalyst.finalize(self.insitu)
 
 #sim = Simulation()
-sim = SimulationWithCatalyst(iterations=10, pv_script="pvDoubleGyre.py")
+sim = SimulationWithCatalyst(iterations=2, pv_script="pvDoubleGyre.py")
 sim.Initialize()
 sim.compute_loop()
 sim.draw_matplotlib()

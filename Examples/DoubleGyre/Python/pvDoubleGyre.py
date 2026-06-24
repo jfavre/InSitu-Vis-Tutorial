@@ -12,11 +12,10 @@ paraview.simple._DisableFirstRenderCameraReset()
 
 # Create a new 'Render View'
 renderView1 = CreateView('RenderView')
-renderView1.AxesGrid.Visibility = 1
+
 renderView1.Set(
   ViewSize = [1280, 768],
   InteractionMode = '2D',
-  AxesGrid = 'GridAxes3DActor',
   CenterOfRotation = [1.0, 0.5, 0.0],
   CameraPosition = [1.0, 0.5, 6.7],
   CameraFocalPoint = [1.0, 0.5, 0.0],
@@ -27,6 +26,7 @@ renderView1.Set(
 reader = TrivialProducer(registrationName='grid')
 readerDisplay = Show(reader, renderView1, 'GeometryRepresentation')
 readerDisplay.Representation = 'Outline'
+readerDisplay.DataAxesGrid.GridAxesVisibility = 1
 
 glyph1 = Glyph(registrationName='Glyph1', Input=reader, GlyphType='Arrow')
 glyph1.Set(

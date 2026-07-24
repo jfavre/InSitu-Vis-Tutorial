@@ -4,7 +4,7 @@
 # Written and tested by Jean M. Favre, CSCS
 import paraview
 paraview.compatibility.major = 6
-paraview.compatibility.minor = 1
+paraview.compatibility.minor = 2
 
 from paraview.simple import *
 #### disable automatic camera reset on 'Show'
@@ -61,7 +61,7 @@ pNG1.Writer.Set(
 
 # write the grid as a VTK Partitioned Dataset
 vTR1 = CreateExtractor('VTPD', reader, registrationName='VTPD1')
-vTR1.Trigger.Frequency = 10
+vTR1.Trigger.Frequency = 100
 vTR1.Writer.FileName = 'doublegyre_{timestep:06d}.vtpd'
 
 # Catalyst options

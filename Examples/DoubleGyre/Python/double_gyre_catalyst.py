@@ -12,10 +12,11 @@
 #
 # run: python3 double_gyre_catalyst.py
 #
-# Tested with Python 3.12.3, Mon 11 Sep 13:42:19 CEST 2023
+# Tested with Python 3.14.0, Fri Jul 24 11:34:26 AM CEST 2026
 #
 ##############################################################################
 import math
+import argparse
 import numpy as np
 import catalyst
 import catalyst_conduit as conduit
@@ -135,7 +136,6 @@ class SimulationWithCatalyst(Simulation):
             mesh["coordsets/coords/type"] = "rectilinear"
             mesh["coordsets/coords/values/x"].set_external(self.xaxis)
             mesh["coordsets/coords/values/y"].set_external(self.yaxis)
-            #mesh["coordsets/coords/values/z"].set_external(self.zaxis)
             mesh["topologies/mesh/type"] = "rectilinear"
             mesh["topologies/mesh/coordset"] = "coords"
 
@@ -169,7 +169,6 @@ class SimulationWithCatalyst(Simulation):
         """Computes and updates velocity fields"""
         while self.iteration < self.max_iterations:
             self.compute_onestep()
-            #self.iteration += 1
             state = self.exec_params["catalyst/state"]
             state["timestep"] = self.iteration
             state["time"] = self.iteration * 0.1
@@ -189,9 +188,39 @@ class SimulationWithCatalyst(Simulation):
         print(self.exec_params["catalyst/channels/grid/data"])
         catalyst.finalize(self.insitu)
 
-#sim = Simulation()
-sim = SimulationWithCatalyst(iterations=2, pv_script="pvDoubleGyre.py")
-sim.Initialize()
-sim.compute_loop()
-sim.draw_matplotlib()
-sim.finalize_catalyst()
+def main(args):
+    if args.insitu:
+        # run with in-situ Catalyst coupling
+        sim = SimulationWithCatalyst(resolution=(args.res, args.res//2), iterations=args.timesteps, pv_script=args.script)
+        sim.Initialize()
+    else:
+        sim = Simulation(resolution=(args.res, args.res//2), iterations=args.timesteps)
+
+    sim.compute_loop()
+    
+    if args.matplotlib:
+        sim.draw_matplotlib()
+
+    if args.insitu:   
+        sim.finalize_catalyst()
+
+parser = argparse.ArgumentParser(
+    description="Double Gyre miniapp for ParaView Catalyst")
+parser.add_argument("-t", "--timesteps", type=int,
+                    help="number of timesteps to run the miniapp (default: 1000)",
+                    default=1000)
+parser.add_argument("--res", type=int,
+                    help="resolution along the X coordinate axis (default: 256)", default=256)
+parser.add_argument("-s", "--script", type=str,
+                    help="path to the Catalyst script to use for in situ processing.",
+                    default="pvDoubleGyre.py")
+parser.add_argument("-i", "--insitu",
+                    help="toggle the use of the in-situ vis coupling with Catalyst",
+                    action='store_true')  # on/off flag)
+parser.add_argument("-m", "--matplotlib",
+                    help="Use matplolib on final timestep",
+                    action='store_true')  # on/off flag)
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    main(args)

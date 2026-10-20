@@ -1,7 +1,7 @@
 # state file generated using paraview version 5.11.1
 import paraview
-paraview.compatibility.major = 5
-paraview.compatibility.minor = 11
+paraview.compatibility.major = 6
+paraview.compatibility.minor = 2
 
 #### import the simple module from the paraview
 from paraview.simple import *
@@ -22,6 +22,7 @@ materialLibrary1 = GetMaterialLibrary()
 
 # Create a new 'Render View'
 view = GetRenderView()
+view.ViewSize = [800, 800]
 view.InteractionMode = '2D'
 view.AxesGrid = 'GridAxes3DActor'
 view.CenterOfRotation = [0.5, 0.5, 0.0]
@@ -69,7 +70,7 @@ SetActiveSource(contour1)
 
 # the extractor will save the view on each time step
 extractor = CreateExtractor('PNG', view, registrationName='PNG1')
-extractor.Writer.FileName = 'output-{timestep}.png'
+extractor.Writer.FileName = 'output-{timestep:03d}.png'
 extractor.Writer.ImageResolution = [800, 800]
 
 if __name__ == "__main__":

@@ -5,13 +5,18 @@
 #
 # Author: Jean M. Favre, Swiss National Supercomputing Center
 #
-# third version runs in parallel, splitting the domain in the vertical direction
+# The Simulation data is written with ADIOS2, with 3 possible outcomes
+# A) the default, uses the "BP4" format, writting the time-dependent series to disk
+#    with the Fides attributes which enable ParaView to read the data properly
+# B) switching to the "SST" mode, the writer expects a data consumer (see fides-sst-reader.cpp)
+# C) switching to the "InTransit-vis" mode, ADIOS2 must be compiled with the ParaView plugin
+
+# run: mpiexec -n 2 python3 heat_diffusion_adios_write.py
 #
-# run: mpiexec -n 2 python3 heat_diffusion_insitu_parallel.py
-#
-# Tested with Python 3.10.12, Tue 12 Sep 15:57:58 CEST 2023
+# Tested with Python 3.14.5, Tue Oct 27 11:33:53 AM CET 2026
 ##############################################################################
 import sys, math
+import argparse
 import numpy as np
 import adios2
 from mpi4py import MPI
@@ -46,9 +51,12 @@ class Simulation:
         #self.vnew = np.zeros([self.yres, self.xres])
         self.set_initial_bc()
         
-    def Initialize_ADIOS(self):
+    def Initialize_ADIOS(self, adios_io: bool):
         self.adios = adios2.Adios("adios2.xml", self.comm)
-        self.io = self.adios.declare_io("writerIO")
+        if adios_io:
+          self.io = self.adios.declare_io("InSitu-vis")
+        else:
+          self.io = self.adios.declare_io("writerIO")
 
     # Global dimensions: Z, Y, X
         shape = [1, self.xres + 2, self.xres + 2]
@@ -104,7 +112,11 @@ class Simulation:
                          for j in range(self.rmesh_dims[1])]
 
     def Finalize(self):
-        pass
+      import gc
+      # Ensure ADIOS2 objects are destroyed before MPI finalization.
+      self.io = None
+      self.adios = None
+      gc.collect()
 
     def SimulateOneTimestep(self):
         # there is no ghost-data exchange. Run in serial-mode only
@@ -139,6 +151,7 @@ class Simulation:
             engine.end_step()
           self.SimulateOneTimestep()
         engine.close()
+        del engine
 
 class ParallelSimulation(Simulation):
     def __init__(self, resolution, iterations):
@@ -189,11 +202,27 @@ receives the upper neighbor's first interior row into the top ghost.
 '''
 # Main program
 #
-def main():
-    sim = ParallelSimulation(resolution=256, iterations=10000)
+def main(args):
+    sim = ParallelSimulation(resolution=args.res, iterations=args.timesteps)
     sim.Initialize()
-    sim.Initialize_ADIOS()
-    sim.MainLoop(frequency=500)
+    sim.Initialize_ADIOS(args.pv)
+    sim.MainLoop(frequency=args.freq)
     sim.Finalize()
 
-main()
+
+parser = argparse.ArgumentParser(description="heat diffusion miniapp with ADIOS2 output")
+parser.add_argument("-t", "--timesteps", type=int, help="number of timesteps (default: 10000)", default=10000)
+parser.add_argument("-f", "--freq", type=int, help="stride to write data (default: 500)", default=500)
+parser.add_argument("--res", type=int, help="resolution in each direction (default: 64)", default=64)
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--bp4', action='store_true', help='Use BP4 (default)')
+group.add_argument('--pv',  action='store_true', help='Use ParaView')
+group.add_argument('--sst', action='store_true', help='Use SST')
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    # BP4 is the default if no option is specified
+    if not (args.bp4 or args.pv or args.sst):
+      args.bp4 = True
+    main(args)
+

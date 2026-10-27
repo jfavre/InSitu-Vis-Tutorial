@@ -1,3 +1,4 @@
 export CATALYST_IMPLEMENTATION_NAME=paraview
-export CATALYST_IMPLEMENTATION_PATHS=/local/apps/ParaView/dev/lib/catalyst
-. ~/pv511.2.sh
+export CATALYST_IMPLEMENTATION_PATHS=/local/apps/ParaView/6.2/lib/catalyst
+
+export ADIOS2_PLUGIN_PATH=`spack location -i adios2`/lib

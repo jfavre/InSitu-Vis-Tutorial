@@ -1,31 +1,41 @@
-
+. /local/apps/spack/share/spack/setup-env.sh
 spack load adios2
 spack load py-matplotlib
+############### 
 
 cmake -B buildSSTConsumer -S . \
- -DCMAKE_BUILD_TYPE=Release \
- -DFides_DIR=/local/apps/fides-adios2.11-install/lib/cmake/fides \
- -DViskores_DIR=/local/apps/viskores-build-tbb/lib/cmake/viskores-1.1
+ -DFides_DIR=/local/apps/fides-adios2.12Install/lib/cmake/fides \
+ -DViskores_DIR=/local/apps/viskores-build-tbb/lib/cmake/viskores-1.2
 
 cmake --build buildSSTConsumer
- 
+
 # First run. Classic output to an ADIOS BP file
 # make sure adios2.xml contains the string <engine type="BP4">
  
-mpiexec -n 2 python3 heat_diffusion_insitu_parallel.py 
+mpiexec -n 4 python3 heat_diffusion_adios_write.py --bp4 --res=256 --timesteps 10000 --freq 500
 
 bpls -la diffusion.bp
 
-# Second run. In transit transfer to a data consumer
+############### Second run. In transit transfer to a data consumer
 
 # make sure adios2.xml contains the string <engine type="SST">
 
 rm -rf diffusion.bp
-. ~/viskores.sh
-mpiexec -n 2 python3 heat_diffusion_insitu_parallel.py &
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`spack location -i adios2`/lib
+
+mpiexec -n 4 python3 heat_diffusion_adios_write.py --sst --res=256 --timesteps 10000 --freq 500 &
+
 ./buildSSTConsumer/fides-sst-reader
 # view images
 eog diffusion*png
+
+############### Third run. In situ transfer via the ADIOS2-ParaView plugin
+
+# make sure adios2.xml contains the string <engine type="SST">
+
+rm -rf diffusion*png
+
+mpiexec -n 4 python3 heat_diffusion_adios_write.py --pv --res=256 --timesteps 10000 --freq 500
+
+rm /tmp/diffusion*png
 

@@ -1,5 +1,7 @@
-# state file generated using paraview version 5.11.1
+# state file tested with paraview version 6.2
 import paraview
+import os
+
 paraview.compatibility.major = 6
 paraview.compatibility.minor = 2
 
@@ -14,7 +16,7 @@ from paraview.catalyst import Options
 options = Options()
 
 # directory under which to save all extracts
-options.ExtractsOutputDirectory = '/tmp'
+options.ExtractsOutputDirectory = (os.getenv("SCRATCH") or "/dev/shm") +'/ADIOS2'
 SaveExtractsUsingCatalystOptions(options)
 
 # get the material library
@@ -22,17 +24,16 @@ materialLibrary1 = GetMaterialLibrary()
 
 # Create a new 'Render View'
 view = GetRenderView()
-view.ViewSize = [800, 800]
-view.InteractionMode = '2D'
-view.AxesGrid = 'GridAxes3DActor'
-view.CenterOfRotation = [0.5, 0.5, 0.0]
-view.StereoType = 'Crystal Eyes'
-view.CameraPosition = [0.5, 0.5, 3.35]
-view.CameraFocalPoint = [0.5, 0.5, 0.0]
-view.CameraFocalDisk = 1.0
-view.CameraParallelScale = 0.7071067811865476
-view.BackEnd = 'OSPRay raycaster'
-view.OSPRayMaterialLibrary = materialLibrary1
+view.Set(
+  ViewSize = [800, 800],
+  InteractionMode = '2D',
+  AxesGrid = 'GridAxes3DActor',
+  CenterOfRotation = [0.5, 0.5, 0.0],
+  CameraPosition = [0.5, 0.5, 3.35],
+  CameraFocalPoint = [0.5, 0.5, 0.0],
+  CameraFocalDisk = 1.0,
+  CameraParallelScale = 0.707,
+)
 
 if __name__ == "__main__":
   producer = FidesReader(registrationName='diffusion.bp', FileName='diffusion.bp')
@@ -41,11 +42,12 @@ else:
 
 # create a new 'Contour'
 contour1 = Contour(registrationName='Contour1', Input=producer)
-contour1.ContourBy = ['POINTS', 'temperature']
-contour1.ComputeNormals = 0
-contour1.Isosurfaces = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-contour1.PointMergeMethod = 'Uniform Binning'
-  
+contour1.Set(
+  ContourBy = ['POINTS', 'temperature'],
+  ComputeNormals = 0,
+  Isosurfaces = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+)
+
 producerDisplay = Show(producer)
 producerDisplay.Representation = 'Surface'
 ColorBy(producerDisplay, ('POINTS', 'temperature'))
@@ -70,7 +72,7 @@ SetActiveSource(contour1)
 
 # the extractor will save the view on each time step
 extractor = CreateExtractor('PNG', view, registrationName='PNG1')
-extractor.Writer.FileName = 'output-{timestep:03d}.png'
+extractor.Writer.FileName = 'diffusion-{timestep:03d}.png'
 extractor.Writer.ImageResolution = [800, 800]
 
 if __name__ == "__main__":

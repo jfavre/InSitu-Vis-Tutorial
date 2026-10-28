@@ -13,18 +13,18 @@
 
             <!-- SST engine parameters -->
 
-            <parameter key="RendezvousReaderCount" value="1"/>
+	    <parameter key="RendezvousReaderCount" value="1"/>
             <parameter key="QueueLimit" value="3"/>
             <parameter key="QueueFullPolicy" value="Discard"/>
 
             <!-- BP4/SST engine parameters -->
             <parameter key="NumAggregators" value="1"/>
             <parameter key="OpenTimeoutSecs" value="100.0"/>
-            <parameter key="SubStreams" value="1"/>
+            <!-- <parameter key="SubStreams" value="1"/> -->
         </engine>
     </io>
                     
-    <io name="InTransit-vis">
+    <io name="InSitu-vis">
         <engine type="plugin">
             <!-- general plugin engine parameters -->
             <parameter key="PluginName" value="fides"/>
